@@ -40,7 +40,7 @@ void GameModel::createGame(int row, int col, int mineCount)
     }
 
     // 随机布雷
-    srand(time(0));
+    srand((unsigned int)time(0));
     for(int k = mineNumber; k > 0; k--)
     {
         // 埋雷
