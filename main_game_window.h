@@ -24,7 +24,7 @@ private:
 
 private slots:
     void onStartGameClicked();    // 开始游戏
-    void onLevelChooseClicked();  // 选择游戏难度
+    void onLevelChooseClicked(QAction *sender);  // 选择游戏难度
     void onQuitClicked();         // 退出游戏
 };
 

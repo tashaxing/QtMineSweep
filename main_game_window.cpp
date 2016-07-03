@@ -12,6 +12,7 @@ MainGameWindow::MainGameWindow(QWidget *parent) :
 
     // 关联信号槽
     connect(ui->actionStart, SIGNAL(triggered(bool)), this, SLOT(onStartGameClicked()));
+    connect(ui->actionBasic, SIGNAL(triggered(bool)), this, SLOT(onLevelChooseClicked(QAction *)));
 
     // 创建游戏初始化游戏
     game = new GameModel;
@@ -32,9 +33,16 @@ void MainGameWindow::onStartGameClicked()
     game->createGame();
 }
 
-void MainGameWindow::onLevelChooseClicked()
+void MainGameWindow::onLevelChooseClicked(QAction *sender)
 {
-
+    if(sender == ui->actionBasic)
+    {
+        qDebug()<<"basic";
+    }
+    else if(sender == ui->actionMedium)
+    {
+        qDebug()<<"medium";
+    }
 }
 
 void MainGameWindow::onQuitClicked()
