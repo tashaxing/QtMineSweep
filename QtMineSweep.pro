@@ -20,3 +20,6 @@ HEADERS  += main_game_window.h \
     game_model.h
 
 FORMS    += maingamewindow.ui
+
+RESOURCES += \
+    resource.qrc

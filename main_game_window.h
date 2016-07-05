@@ -16,15 +16,16 @@ class MainGameWindow : public QMainWindow
 public:
     explicit MainGameWindow(QWidget *parent = 0);
     ~MainGameWindow();
-
+protected:
+    virtual void paintEvent(QPaintEvent *event);       // 界面重绘
+    virtual void mousePressEvent(QMouseEvent *event);  // 鼠标控制
 private:
     Ui::MainGameWindow *ui;
 
     GameModel *game; // 游戏
-
 private slots:
     void onStartGameClicked();    // 开始游戏
-    void onLevelChooseClicked(QAction *sender);  // 选择游戏难度
+    void onLevelChooseClicked();  // 选择游戏难度
     void onQuitClicked();         // 退出游戏
 };
 

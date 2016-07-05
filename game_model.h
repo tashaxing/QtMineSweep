@@ -44,14 +44,13 @@ public:
     void markMine(int m, int n); // 标记雷
     void createGame(int row = kRow, int col = kCol, int mineCount = kMineCount); // 初始化游戏
     GameState checkGame(); // 检查游戏输赢
-private:
+public:
     std::vector<std::vector<MineBlock>> gameMap; // 游戏地图
     int mRow; // 地图行数
     int mCol; // 地图列数
     int mineNumber; // 雷数
 
     GameState gameState; // 当前游戏状态
-
 };
 
 #endif // GAMEMODEL_H
