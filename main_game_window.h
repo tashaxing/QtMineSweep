@@ -23,10 +23,12 @@ private:
     Ui::MainGameWindow *ui;
 
     GameModel *game; // 游戏
+    QTimer *timer;
 private slots:
     void onStartGameClicked();    // 开始游戏
     void onLevelChooseClicked();  // 选择游戏难度
     void onQuitClicked();         // 退出游戏
+    void updateTimer();           // 计时
 };
 
 #endif // MAIN_GAME_WINDOW_H

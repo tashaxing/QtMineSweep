@@ -4,6 +4,7 @@
 // 游戏逻辑模型类，逻辑与界面分离
 #include <vector>
 
+// ---------------- 全局定义变量 ---------------- //
 // 方块的状态，未挖掘，翻开，标记，雷出现，错误标记
 enum BlockState
 {
@@ -29,10 +30,20 @@ enum GameState
     WIN
 };
 
+// 游戏难度，有低级、中级、高级
+enum GameLevel
+{
+    BASIC,
+    MEDIUM,
+    HARD
+};
+
 // 游戏默认参数
 const int kRow = 15;
 const int kCol = 20;
 const int kMineCount = 50;
+const int kTime = 0;
+// ----------------------------------------------- //
 
 class GameModel
 {
@@ -42,15 +53,19 @@ public:
 public:
     void digMine(int m, int n); //挖雷, m是行， n是列
     void markMine(int m, int n); // 标记雷
-    void createGame(int row = kRow, int col = kCol, int mineCount = kMineCount); // 初始化游戏
+    void createGame(int row = kRow, int col = kCol, int mineCount = kMineCount, GameLevel level = MEDIUM); // 初始化游戏
+    void restartGame();  // 按当前参数重新开始游戏
     GameState checkGame(); // 检查游戏输赢
 public:
     std::vector<std::vector<MineBlock>> gameMap; // 游戏地图
     int mRow; // 地图行数
     int mCol; // 地图列数
-    int mineNumber; // 雷数
+    int totalMineNumber; // 雷数
+    int timerSeconds; // 计时（秒）
 
+    int curMineNumber;
     GameState gameState; // 当前游戏状态
+    GameLevel gameLevel; // 当前游戏难度
 };
 
 #endif // GAMEMODEL_H
