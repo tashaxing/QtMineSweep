@@ -2,6 +2,7 @@
 #include <QPainter>
 #include <QMouseEvent>
 #include <QTimer>
+#include <QMessageBox>
 #include "main_game_window.h"
 #include "ui_maingamewindow.h"
 #include "game_model.h"
@@ -18,7 +19,8 @@ MainGameWindow::MainGameWindow(QWidget *parent) :
     ui(new Ui::MainGameWindow)
 {
     ui->setupUi(this);
-
+    // 创建计时数字标签
+    timeLabel = new QLabel(this);
     // 关联信号槽
     connect(ui->actionStart, SIGNAL(triggered(bool)), this, SLOT(onStartGameClicked()));
     connect(ui->actionBasic, SIGNAL(triggered(bool)), this, SLOT(onLevelChooseClicked()));
@@ -29,11 +31,14 @@ MainGameWindow::MainGameWindow(QWidget *parent) :
     timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(updateTimer()));
 
+
     // 创建游戏初始化游戏，设置好参数，默认是中级,启动计时器
     // 定义窗口大小(必须放在游戏创建之后后面，该函数设置后大小不可变动，窗口强制重绘)
     game = new GameModel;
     game->createGame();
     setFixedSize(game->mCol * blockSize + offsetX * 2, game->mRow * blockSize + offsetY * 2 + spaceY);
+    timeLabel->setGeometry(game->mCol * blockSize + offsetX * 2 - 80, spaceY / 2, 80, 20);
+    timeLabel->setText("Time: " + QString::number(game->timerSeconds) + " s");
     timer->start(1000);
 }
 
@@ -51,7 +56,7 @@ void MainGameWindow::paintEvent(QPaintEvent *event)
     QPixmap bmpBlocks(":/res/blocks.bmp");
     QPixmap bmpFaces(":/res/faces.bmp");
     QPixmap bmpFrame(":/res/frame.bmp");
-    QPixmap bmpTimenumber(":/res/timenumber.bmp");
+    QPixmap bmpNumber(":/res/timenumber.bmp");
 
     // 绘制笑脸
     switch(game->gameState)
@@ -70,6 +75,19 @@ void MainGameWindow::paintEvent(QPaintEvent *event)
         break;
     }
 
+    // 绘制剩余雷数
+    int n = game->curMineNumber;
+    int posX = (game->mCol * blockSize + offsetX * 2) / 2 - 50; // 最后一位数字的横坐标
+    if(n <= 0) // 如果雷数为0或者减到0以下，单独绘制
+    {
+        painter.drawPixmap(posX, spaceY / 2, bmpNumber, n * 20, 0, 20, 28); // 20是数字的宽，28是高
+    }
+    while(n > 0) // 如果是多位数
+    {
+        painter.drawPixmap(posX - 20, spaceY / 2, bmpNumber, n % 10 * 20, 0, 20, 28); // 每次从后面绘制一位
+        n /= 10;
+        posX -= 20;
+    }
 
     // 绘制雷区
     for(int i = 0; i < game->mRow; i++)
@@ -100,13 +118,32 @@ void MainGameWindow::paintEvent(QPaintEvent *event)
                 else if(game->gameState == OVER)
                 {
                     // 如果游戏已经结束，就显示标错了
-                    painter.drawPixmap(j * blockSize + offsetX, i * blockSize + offsetY + spaceY, bmpBlocks, blockSize * 10, 0, blockSize, blockSize);
+                    painter.drawPixmap(j * blockSize + offsetX, i * blockSize + offsetY + spaceY, bmpBlocks, blockSize * 12, 0, blockSize, blockSize);
                 }
                 break;
             default:
                 break;
             }
         }
+    }
+    // 处理游戏状态
+    handleGameState(game);
+}
+
+void MainGameWindow::handleGameState(GameModel *game)
+{
+    if(game->gameState == OVER)
+    {
+        timer->stop();
+        qDebug() << "you lose!";
+    }
+    else if(game->gameState == WIN)
+    {
+        timer->stop();
+        qDebug() << "you win!";
+//        // 可以选择弹窗告知游戏胜利成绩
+//        QMessageBox::information(this, "win!", "your time: " + QString::number(game->timerSeconds) + " s");
+//        game->gameState = PLAYING; // 赶紧要改回正常状态，不然那个弹窗消失不了
     }
 }
 
@@ -123,11 +160,14 @@ void MainGameWindow::mousePressEvent(QMouseEvent *event)
         && y <= spaceY / 2 + 24)
         {
             game->restartGame(); // 重玩
+            timer->start(1000);
+            timeLabel->setText("Time: " + QString::number(game->timerSeconds) + " s"); // 每次重玩都将计时显示为0s
             update();
         }
     }
-    else
+    else if(game->gameState != OVER && game->gameState != WIN)
     {
+        // 游戏没输或没赢才接受点击
         // 此时判断点击的是哪个方块
         // 获得点击坐标
         int px = event->x() - offsetX;
@@ -156,7 +196,10 @@ void MainGameWindow::mousePressEvent(QMouseEvent *event)
 void MainGameWindow::onStartGameClicked()
 {
     qDebug()<<"game started";
-    game->createGame();
+    game->restartGame(); // 重新开始
+    timeLabel->setText("Time: " + QString::number(game->timerSeconds) + " s");
+    timer->start(1000);
+    update();
 }
 
 void MainGameWindow::onLevelChooseClicked()
@@ -165,31 +208,37 @@ void MainGameWindow::onLevelChooseClicked()
     if(actionSender == ui->actionBasic)
     {
         qDebug() << "basic";
-        // 先设置游戏模型，再刷新UI，窗口大小改变会强制重绘
+        // 先设置游戏模型
         game->createGame(8, 10, 15, BASIC);
-        setFixedSize(game->mCol * blockSize + offsetX * 2, game->mRow * blockSize + offsetY * 2 + spaceY);
     }
     else if(actionSender == ui->actionMedium)
     {
         qDebug() << "medium";
         game->createGame(15, 20, 50, MEDIUM);
-        setFixedSize(game->mCol * blockSize + offsetX * 2, game->mRow * blockSize + offsetY * 2 + spaceY);
     }
     else if(actionSender == ui->actionHard)
     {
         qDebug() << "hard";
         game->createGame(20, 30, 100, HARD);
-        setFixedSize(game->mCol * blockSize + offsetX * 2, game->mRow * blockSize + offsetY * 2 + spaceY);
     }
+    // 重新计时
+    timer->start(1000);
+    // 再刷新UI，窗口大小改变会强制重绘
+    timeLabel->setText("Time: " + QString::number(game->timerSeconds) + " s");
+    timeLabel->setGeometry(game->mCol * blockSize + offsetX * 2 - 80, spaceY / 2, 80, 20);
+    setFixedSize(game->mCol * blockSize + offsetX * 2, game->mRow * blockSize + offsetY * 2 + spaceY);
 }
 
 void MainGameWindow::updateTimer()
 {
+    // 计时器计时
     game->timerSeconds++;
+    timeLabel->setText("Time: " + QString::number(game->timerSeconds) + " s");
     qDebug() << game->timerSeconds;
 }
 
 void MainGameWindow::onQuitClicked()
 {
+    // 退出
     QCoreApplication::quit();
 }

@@ -140,21 +140,31 @@ void GameModel::digMine(int m, int n)
 void GameModel::markMine(int m, int n)
 {
     // 如果标记错了，就记为错误标记，在ui层游戏结束时做绘制区分
-    if(gameMap[m][n].valueFlag == -1)
+    // 注意这里有个逻辑，如果一个方块标记两次会回到未挖掘的状态
+    if(gameMap[m][n].curState == UN_DIG)
     {
-        gameMap[m][n].curState = MARKED;
-        curMineNumber--; //挖对了雷就减1
+        if(gameMap[m][n].valueFlag == -1)
+        {
+            gameMap[m][n].curState = MARKED;
+        }
+        else
+        {
+            gameState = FAULT;
+            gameMap[m][n].curState = WRONG_BOMB;
+        }
+        curMineNumber--; // 挖对了雷就减1
     }
-    else
+    else if(gameMap[m][n].curState == MARKED || gameMap[m][n].curState == WRONG_BOMB)
     {
-        gameState = FAULT;
-        gameMap[m][n].curState = WRONG_BOMB;
+        gameMap[m][n].curState = UN_DIG;
+        gameState = PLAYING;
+        curMineNumber++; // 雷数加回来
     }
     // 检查游戏输赢,并作调整
     checkGame();
 }
 
-GameState GameModel::checkGame()
+void GameModel::checkGame()
 {
     // 游戏结束，显示所有雷
     if(gameState == OVER)
@@ -170,10 +180,10 @@ GameState GameModel::checkGame()
                 }
             }
         }
-        return gameState;
+        return;
     }
     // 如果雷排完了，且所有方块都挖出或者标记
-    if(curMineNumber == 0)
+    if(gameState != FAULT)
     {
         for(int i = 0; i < mRow; i++)
         {
@@ -182,12 +192,14 @@ GameState GameModel::checkGame()
                 if(gameMap[i][j].curState == UN_DIG)
                 {
                     gameState = PLAYING;
-                    return gameState;
+                    return;
                 }
             }
         }
-        // 否则游戏赢了
+        // 否则既没有错误标记游戏状态又不是输或者进行中，游戏就是赢了
         gameState = WIN;
     }
-    return gameState; // 返回游戏状态
+
+
+
 }
