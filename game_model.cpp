@@ -199,7 +199,4 @@ void GameModel::checkGame()
         // 否则既没有错误标记游戏状态又不是输或者进行中，游戏就是赢了
         gameState = WIN;
     }
-
-
-
 }
